@@ -1,5 +1,6 @@
 package com.lch.dbpool.pool;
 
+import com.lch.dbpool.reader.ConfigReader;
 import com.mysql.cj.jdbc.ConnectionImpl;
 
 import java.io.IOException;
@@ -20,26 +21,25 @@ public class MyConn extends ConnectionImpl {
     private Connection conn;
     private Boolean isBusy = false;//默认是空闲的
 
-    private static String url;
-    private static String username;
-    private static String password;
+//    private static String url;
+//    private static String username;
+//    private static String password;
 
     static {
         try {
-            // 加载类
-            Properties prop = new Properties();
-            prop.load(Thread.currentThread().getContextClassLoader().getResourceAsStream("jdbc.properties"));
-            String driver = (String) prop.get("driver");
-            url = (String) prop.get("url");
-            username = (String) prop.get("username");
-            password = (String) prop.get("password");
             // 加载驱动
-            Class.forName(driver);
-        } catch (IOException e) {
-            e.printStackTrace();
+            Class.forName(ConfigReader.getValue("driver"));
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
+            // 加载类
+//            Properties prop = new Properties();
+//            prop.load(Thread.currentThread().getContextClassLoader().getResourceAsStream("jdbc.properties"));
+//            String driver = (String) prop.get("driver");
+//            url = (String) prop.get("url");
+//            username = (String) prop.get("username");
+//            password = (String) prop.get("password");
+            // 加载驱动
     }
 
 
@@ -47,7 +47,8 @@ public class MyConn extends ConnectionImpl {
     {
         //获取连接
         try {
-            conn = DriverManager.getConnection(url, username, password);
+            conn = DriverManager.getConnection(ConfigReader.getValue("url"),
+                    ConfigReader.getValue("username"), ConfigReader.getValue("password"));
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -57,14 +58,12 @@ public class MyConn extends ConnectionImpl {
         return conn;
     }
 
-    public void setConn(Connection conn) {
-        this.conn = conn;
-    }
-
+    // 获取状态
     public Boolean getBusy() {
         return isBusy;
     }
 
+    // 设置状态
     public void setBusy(Boolean busy) {
         isBusy = busy;
     }

@@ -2,9 +2,12 @@ package com.lch.dbpool.pool;
 
 import com.mysql.cj.jdbc.ConnectionImpl;
 
+import java.io.IOException;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Properties;
 
 /**
  * 这是一个自己定义的类
@@ -14,8 +17,41 @@ import java.sql.SQLException;
  */
 public class MyConn extends ConnectionImpl {
 
-    public Connection conn;
-    public Boolean isBusy = false;
+    private Connection conn;
+    private Boolean isBusy = false;//默认是空闲的
+
+    private static String url;
+    private static String username;
+    private static String password;
+
+    static {
+        try {
+            // 加载类
+            Properties prop = new Properties();
+            prop.load(Thread.currentThread().getContextClassLoader().getResourceAsStream("jdbc.properties"));
+            String driver = (String) prop.get("driver");
+            url = (String) prop.get("url");
+            username = (String) prop.get("username");
+            password = (String) prop.get("password");
+            // 加载驱动
+            Class.forName(driver);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    //每创建一个对象就创建一个连接
+    {
+        //获取连接
+        try {
+            conn = DriverManager.getConnection(url, username, password);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 
     public Connection getConn() {
         return conn;
@@ -47,15 +83,18 @@ public class MyConn extends ConnectionImpl {
     }
 
 
-    //这个方法判断MyConn的状态 false为空闲 true为繁忙
+    /**
+     * 这个方法判断MyConn的状态 false为空闲 true为繁忙
+     */
     @Override
     public boolean isClosed() {
         return this.getBusy();
     }
 
 
-    //这个方法有用conn属性来调用
-    //conn的值在连接池中赋值
+    /**这个方法有用conn属性来调用
+     * conn的值在连接池中赋值
+     */
     @Override
     public PreparedStatement prepareStatement(String sql) throws SQLException {
         return conn.prepareStatement(sql);

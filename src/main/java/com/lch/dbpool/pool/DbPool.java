@@ -26,6 +26,20 @@ public class DbPool {
     /*需要一个集合来存放这些连接*/
     private static List<MyConn> conns = new ArrayList<>();
 
+    /*连接池一般一个系统一个，所以做成单例模式*/
+    // 私有的构造方法
+    private DbPool() {}
+
+    // 私有的属性
+    private static DbPool dbPool;
+
+    // 返回连接池对象的方法
+    public static DbPool getDbPool() {
+        if (dbPool == null) {
+            return new DbPool();
+        }
+        return dbPool;
+    }
     /*在启动项目的时候就创建多个连接*/
     static {
         //做一个循环 每一次都创建一个MyConn对象

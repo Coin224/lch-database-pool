@@ -1,14 +1,12 @@
 package com.lch.dbpool.pool;
 
+import com.lch.dbpool.adapter.ConnAdapter;
 import com.lch.dbpool.reader.ConfigReader;
-import com.mysql.cj.jdbc.ConnectionImpl;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Properties;
 
 /**
  * 这是一个自己定义的类
@@ -16,30 +14,25 @@ import java.util.Properties;
  * 让它close的时候并不是真的close
  * 而是把状态改变
  */
-public class MyConn extends ConnectionImpl {
+public class MyConn extends ConnAdapter {
 
     private Connection conn;
-    private Boolean isBusy = false;//默认是空闲的
+    private Boolean used = false;//默认是空闲的
 
-//    private static String url;
-//    private static String username;
-//    private static String password;
+
+    private static String driver = ConfigReader.getValue("driver");
+    private static String url = ConfigReader.getValue("url");
+    private static String username = ConfigReader.getValue("username");
+    private static String password = ConfigReader.getValue("password");
+
 
     static {
         try {
             // 加载驱动
-            Class.forName(ConfigReader.getValue("driver"));
+            Class.forName(driver);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
-            // 加载类
-//            Properties prop = new Properties();
-//            prop.load(Thread.currentThread().getContextClassLoader().getResourceAsStream("jdbc.properties"));
-//            String driver = (String) prop.get("driver");
-//            url = (String) prop.get("url");
-//            username = (String) prop.get("username");
-//            password = (String) prop.get("password");
-            // 加载驱动
     }
 
 
@@ -47,38 +40,25 @@ public class MyConn extends ConnectionImpl {
     {
         //获取连接
         try {
-            conn = DriverManager.getConnection(ConfigReader.getValue("url"),
-                    ConfigReader.getValue("username"), ConfigReader.getValue("password"));
+            conn = DriverManager.getConnection(url, username, password);
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public Connection getConn() {
-        return conn;
+
+    public Boolean getUsed() {
+        return used;
     }
 
-    // 获取状态
-    public Boolean getBusy() {
-        return isBusy;
+    public void setUsed(Boolean used) {
+        this.used = used;
     }
-
-    // 设置状态
-    public void setBusy(Boolean busy) {
-        isBusy = busy;
-    }
-
 
     //这个方法是用来改变MyConn的状态
     @Override
     public void close() throws SQLException {
-        //获取到已连接的数量
-        int count = DbPool.getCount();
-        //关闭的时候就--
-        count--;
-        //重新给count赋值
-        DbPool.setCount(count);
-        this.setBusy(false);
+        this.setUsed(false);
     }
 
 
@@ -87,7 +67,7 @@ public class MyConn extends ConnectionImpl {
      */
     @Override
     public boolean isClosed() {
-        return this.getBusy();
+        return this.getUsed();
     }
 
 

@@ -22,6 +22,9 @@ public class DbPool {
 
     /*连接池中连接的最少数量*/
     private static int MinConnNum = Integer.parseInt(ConfigReader.getValue("MinConnNum"));
+    private static int maxWaitTime = Integer.parseInt(ConfigReader.getValue("maxWaitTime"));
+
+
 
 
     /*需要一个集合来存放这些连接*/
@@ -88,7 +91,7 @@ public class DbPool {
     public Connection getConn() {
         MyConn conn = this.getMyConn();
         int count = 0;//计算秒数
-        while (conn == null && count < 50) {
+        while (conn == null && count < maxWaitTime*10) {
             try {
                 // 再获取连接
                 conn = this.getMyConn();
@@ -100,9 +103,9 @@ public class DbPool {
             count++;
         }
         // 等待5秒之后，如果依然为空  抛出异常
-//        if (conn == null) {
-//            throw new NoConnExeception("等待超时");
-//        }
+        if (conn == null) {
+            throw new NoConnExeception("等待超时");
+        }
         return conn;
     }
 

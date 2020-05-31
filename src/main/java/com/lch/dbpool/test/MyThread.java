@@ -23,6 +23,7 @@ public class MyThread extends Thread {
             if (conn != null) {
                 conn.close();
             }
+            System.out.println("释放了");
         } catch (Exception e) {
             e.printStackTrace();
         }
